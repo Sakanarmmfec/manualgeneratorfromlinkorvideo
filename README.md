@@ -1,0 +1,2 @@
+# manualgeneratorfromlinkorvideo
+manualgeneratorfromlinkorvideo
