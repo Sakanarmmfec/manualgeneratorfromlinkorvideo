@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Return file download
-      const response = new NextResponse(result.buffer);
+      const response = new NextResponse(result.buffer as any);
       response.headers.set('Content-Type', result.document!.mimeType);
       response.headers.set('Content-Disposition', `attachment; filename="${result.document!.originalName}"`);
       response.headers.set('Content-Length', result.document!.size.toString());

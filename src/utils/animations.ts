@@ -26,6 +26,16 @@ export const animations = {
   // Spin for loading
   spin: 'animate-spin',
   
+  // Delays
+  delay75: 'delay-75',
+  delay100: 'delay-100',
+  delay150: 'delay-150',
+  delay200: 'delay-200',
+  delay300: 'delay-300',
+  delay500: 'delay-500',
+  delay700: 'delay-700',
+  delay1000: 'delay-1000',
+  
   // Smooth transitions
   transition: 'transition-all duration-200 ease-in-out',
   transitionSlow: 'transition-all duration-300 ease-in-out',

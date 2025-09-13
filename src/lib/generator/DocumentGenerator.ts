@@ -370,6 +370,35 @@ export class DocumentGenerator {
   }
 
   /**
+   * Get a generated document by ID
+   */
+  async getDocument(documentId: string): Promise<GeneratedDocument | null> {
+    // This would typically fetch from a database or storage
+    // For now, return null as a placeholder
+    return null;
+  }
+
+  /**
+   * Generate preview for a document
+   */
+  async generatePreview(documentId: string): Promise<{ success: boolean; previewUrl?: string; error?: string }> {
+    try {
+      const document = await this.getDocument(documentId);
+      if (!document) {
+        return { success: false, error: 'Document not found' };
+      }
+      
+      const previewUrl = this.generatePreviewUrl(documentId);
+      return { success: true, previewUrl };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  }
+
+  /**
    * Clear caches and reset state
    */
   async reset(): Promise<void> {

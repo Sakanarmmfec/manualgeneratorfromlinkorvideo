@@ -1,9 +1,13 @@
 // Base UI Components
 export { Button } from './Button';
+export { Button as button } from './button';
 export { Input } from './Input';
+export { Input as input } from './input';
+export { Textarea } from './Textarea';
 export { Select } from './Select';
 export { Checkbox } from './Checkbox';
-export { Card, CardHeader, CardTitle, CardContent } from './Card';
+export { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from './Card';
+export { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from './card';
 
 // Enhanced UI Components
 export { LoadingSpinner, Skeleton, ShimmerEffect } from './LoadingSpinner';

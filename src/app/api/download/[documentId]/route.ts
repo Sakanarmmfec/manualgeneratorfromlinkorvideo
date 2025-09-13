@@ -56,14 +56,16 @@ export async function GET(
     }
 
     // Export document in requested format
-    const exportResult = await documentExporter.exportDocument(document, {
-      format: format as 'pdf' | 'docx' | 'html',
-      includeMFECBranding: true,
-      optimizeForPrint: format === 'pdf',
-      includeSourceAttribution: true
-    });
+    const exportPath = await documentExporter.exportDocument(
+      document as any, // FormattedDocument
+      format as 'pdf' | 'docx' | 'html',
+      document.template,
+      {
+        filename: `${document.title.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().split('T')[0]}`
+      }
+    );
 
-    if (!exportResult.success || !exportResult.filePath) {
+    if (!exportPath) {
       return NextResponse.json(
         { success: false, error: 'Failed to export document' },
         { status: 500 }
@@ -74,13 +76,17 @@ export async function GET(
     const fs = require('fs');
     const path = require('path');
     
-    const filePath = exportResult.filePath;
-    const fileBuffer = fs.readFileSync(filePath);
+    const fileBuffer = fs.readFileSync(exportPath);
     const fileName = `${document.title.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().split('T')[0]}.${format}`;
 
     // Set appropriate headers
     const headers = new Headers();
-    headers.set('Content-Type', exportResult.mimeType || 'application/octet-stream');
+    const mimeTypes = {
+      pdf: 'application/pdf',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      html: 'text/html'
+    };
+    headers.set('Content-Type', mimeTypes[format as keyof typeof mimeTypes] || 'application/octet-stream');
     headers.set('Content-Disposition', `attachment; filename="${fileName}"`);
     headers.set('Content-Length', fileBuffer.length.toString());
 

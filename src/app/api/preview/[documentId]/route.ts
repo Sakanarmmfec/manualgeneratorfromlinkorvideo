@@ -43,20 +43,23 @@ export async function GET(
     }
 
     // Generate HTML preview
-    const htmlPreview = await documentGenerator.generatePreview(document, {
-      format: 'html',
-      includeStyles: true,
-      includeMFECBranding: true
-    });
+    const previewResult = await documentGenerator.generatePreview(documentId);
+    
+    if (!previewResult.success) {
+      return NextResponse.json(
+        { success: false, error: previewResult.error || 'Preview generation failed' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       documentId,
-      preview: htmlPreview,
+      previewUrl: previewResult.previewUrl,
       metadata: {
         title: document.title,
         sourceUrl: document.sourceAttribution.originalUrl,
-        generatedAt: document.generationMetadata.timestamp,
+        generatedAt: document.generationMetadata.generatedAt,
         documentType: document.template.documentType
       }
     });

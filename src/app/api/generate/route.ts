@@ -75,17 +75,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (isYouTubeUrl) {
       logger.info('Processing YouTube video content');
-      extractedContent = await youtubeProcessor.processVideo(url, {
-        extractTranscript: true,
-        captureScreenshots: includeImages,
-        analyzeContent: true
+      extractedContent = await youtubeProcessor.processYouTubeVideo(url, {
+        includeTranscript: true,
+        includeScreenshots: includeImages,
+        maxScreenshots: 10
       });
     } else {
       logger.info('Processing website content');
-      extractedContent = await contentExtractor.extractContent(url, {
+      const extractionResult = await contentExtractor.extractWebsiteContent(url, {
         includeImages,
         maxImages: 10
       });
+      extractedContent = extractionResult.content;
     }
 
     if (!extractedContent) {
@@ -107,37 +108,59 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Step 3: Apply MFEC formatting
     logger.info('Applying MFEC formatting');
-    const formattedContent = await mfecFormatter.formatContent(processedContent, {
-      documentType,
-      includeImages,
-      applyBrandGuidelines: true
-    });
+    const formattedContent = await mfecFormatter.formatDocument(
+      processedContent?.textContent || '',
+      processedContent?.title || 'Document',
+      url,
+      processedContent?.images || []
+    );
 
     // Step 4: Load MFEC template
     logger.info('Loading MFEC template');
-    const template = await templateManager.loadTemplate('MFEC_System&User_Manual_Template.docx');
+    const template = await templateManager.loadTemplate(
+      documentType === 'user_manual' ? 'user_manual' : 'system_manual'
+    );
 
     // Step 5: Generate document
     logger.info('Generating final document');
-    const generatedDocument = await documentGenerator.generateDocument({
-      content: formattedContent,
-      template,
+    // Create DocumentRequest
+    const documentRequest = {
       documentType,
+      language: targetLanguage,
       sourceUrl: url,
-      metadata: {
-        generatedBy: session.email,
-        generatedAt: new Date().toISOString(),
-        sourceType: isYouTubeUrl ? 'youtube_video' : 'website'
-      }
-    });
+      customInstructions
+    };
 
-    logger.info(`Document generation completed: ${generatedDocument.id}`);
+    // Create ProcessedContent
+    const processedContentObj = {
+      refinedContent: formattedContent.htmlContent,
+      organizedSections: formattedContent.sections,
+      sourceAttribution: formattedContent.sourceAttribution,
+      extractionMetadata: {
+        extractedAt: new Date(),
+        processingTime: 0,
+        contentLength: formattedContent.htmlContent.length
+      }
+    };
+
+    const generationResult = await documentGenerator.generateDocument(
+      documentRequest,
+      processedContentObj,
+      {
+        includeImages,
+        includeTableOfContents: true,
+        includeSourceAttribution: true,
+        exportFormats: ['html', 'pdf']
+      }
+    );
+
+    logger.info(`Document generation completed: ${generationResult.document.id}`);
 
     return NextResponse.json({
       success: true,
-      documentId: generatedDocument.id,
-      previewUrl: `/api/preview/${generatedDocument.id}`,
-      downloadUrl: `/api/download/${generatedDocument.id}`,
+      documentId: generationResult.document.id,
+      previewUrl: `/api/preview/${generationResult.document.id}`,
+      downloadUrl: `/api/download/${generationResult.document.id}`,
       progress: 100
     });
 
