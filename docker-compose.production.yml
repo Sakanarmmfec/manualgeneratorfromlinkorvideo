@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  thai-doc-generator-production:
+    image: thai-document-generator:production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MFEC_LLM_BASE_URL=${MFEC_LLM_BASE_URL}
+      - MFEC_LLM_API_KEY=${MFEC_LLM_API_KEY}
+      - MFEC_LLM_CHAT_MODEL=${MFEC_LLM_CHAT_MODEL}
+      - MFEC_LLM_EMBEDDING_MODEL=${MFEC_LLM_EMBEDDING_MODEL}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ALLOW_USER_API_KEYS=${ALLOW_USER_API_KEYS}
+      - DEBUG_MODE=false
+      - LOG_LEVEL=error
+      - NEXT_PUBLIC_ENABLE_ANALYTICS=true
+      - NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING=true
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=20
+      - RATE_LIMIT_REQUESTS_PER_HOUR=200
+      - SECURITY_HEADERS_ENABLED=true
+      - CORS_ORIGIN=${NEXT_PUBLIC_APP_URL}
+    volumes:
+      - production_exports:/app/exports
+      - production_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.thai-doc-prod.rule=Host(`thai-doc-generator.mfec.co.th`)"
+      - "traefik.http.routers.thai-doc-prod.tls=true"
+      - "traefik.http.routers.thai-doc-prod.tls.certresolver=letsencrypt"
+      - "traefik.http.middlewares.thai-doc-security.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.thai-doc-security.headers.sslredirect=true"
+      - "traefik.http.routers.thai-doc-prod.middlewares=thai-doc-security"
+
+volumes:
+  production_exports:
+    driver: local
+  production_logs:
+    driver: local
+
+networks:
+  default:
+    name: thai-doc-generator-production-network

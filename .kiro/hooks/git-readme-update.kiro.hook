@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Git README Updater",
+  "description": "Automatically prompts to update README.md before performing git operations like push, commit, or publish to ensure documentation stays current",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "package.json",
+      ".git/HEAD",
+      ".git/refs/heads/*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before proceeding with any git operations (push, commit, or publish), please review and update the README.md file to ensure it accurately reflects the current state of the project, including any new features, changes, or important information that users should know about."
+  }
+}

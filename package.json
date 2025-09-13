@@ -1,0 +1,59 @@
+{
+  "name": "thai-document-generator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "docker:build": "docker build -t thai-document-generator .",
+    "docker:dev": "docker-compose --profile dev up -d",
+    "docker:staging": "docker-compose -f docker-compose.staging.yml up -d",
+    "docker:production": "docker-compose -f docker-compose.production.yml up -d",
+    "docker:stop": "docker-compose down",
+    "deploy:dev": "npm run docker:dev",
+    "deploy:staging": "npm run docker:staging",
+    "deploy:production": "npm run docker:production",
+    "health-check": "curl -f http://localhost:3000/api/health || exit 1"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0",
+    "tailwindcss": "^3.3.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "lucide-react": "^0.292.0",
+    "clsx": "^2.0.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "mammoth": "^1.6.0",
+    "jspdf": "^2.5.0",
+    "html2canvas": "^1.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "vitest": "^1.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "jsdom": "^23.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "prettier": "^3.0.0",
+    "prettier-plugin-tailwindcss": "^0.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

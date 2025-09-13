@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  thai-doc-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MFEC_LLM_BASE_URL=${MFEC_LLM_BASE_URL}
+      - MFEC_LLM_API_KEY=${MFEC_LLM_API_KEY}
+      - MFEC_LLM_CHAT_MODEL=${MFEC_LLM_CHAT_MODEL}
+      - MFEC_LLM_EMBEDDING_MODEL=${MFEC_LLM_EMBEDDING_MODEL}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ALLOW_USER_API_KEYS=${ALLOW_USER_API_KEYS}
+    volumes:
+      - ./exports:/app/exports
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development service with hot reload
+  thai-doc-generator-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - MFEC_LLM_BASE_URL=${MFEC_LLM_BASE_URL}
+      - MFEC_LLM_API_KEY=${MFEC_LLM_API_KEY}
+      - MFEC_LLM_CHAT_MODEL=${MFEC_LLM_CHAT_MODEL}
+      - MFEC_LLM_EMBEDDING_MODEL=${MFEC_LLM_EMBEDDING_MODEL}
+      - NEXT_PUBLIC_APP_URL=http://localhost:3001
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ALLOW_USER_API_KEYS=${ALLOW_USER_API_KEYS}
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - ./exports:/app/exports
+    restart: unless-stopped
+    profiles:
+      - dev
+
+networks:
+  default:
+    name: thai-doc-generator-network

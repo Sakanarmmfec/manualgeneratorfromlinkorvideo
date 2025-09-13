@@ -1,0 +1,24 @@
+{
+  "enabled": true,
+  "name": "Requirement Change Impact Check",
+  "description": "Monitors requirement-related files for changes and asks if impact analysis is needed before proceeding",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "docs/**/*.md",
+      "README.md",
+      "PROJECT_STRUCTURE.md",
+      "requirements.txt",
+      "package.json",
+      "*.requirements",
+      "*requirements*",
+      "*spec*",
+      "*specification*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A requirement-related file has been changed. Ask the user: \"I noticed changes to requirement files. Do you need me to check all impact first before proceeding with any other changes?\" Wait for their response before taking any further actions."
+  }
+}

@@ -35,11 +35,73 @@ An AI-powered application that automatically generates professional Thai user ma
 
 ## Getting Started
 
-This project is currently in the specification phase. To begin implementation:
+### Local Development
 
-1. Review the specifications in `.kiro/specs/thai-document-generator/`
-2. Start with Task 1 in `tasks.md` for project setup
-3. Follow the implementation plan sequentially
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Run tests
+npm run test
+
+# Build for production
+npm run build
+```
+
+### Free Tier Deployment
+
+Deploy to free hosting platforms optimized for small teams:
+
+```bash
+# Deploy to Railway (recommended)
+./scripts/deploy-free-tier.sh railway
+
+# Deploy to Render
+./scripts/deploy-free-tier.sh render
+
+# Deploy to Vercel
+./scripts/deploy-free-tier.sh vercel
+
+# Windows PowerShell
+.\scripts\deploy-free-tier.ps1 -Platform railway
+```
+
+**Supported Free Platforms:**
+- **Railway**: 512MB RAM, 1 vCPU, 1GB storage
+- **Render**: 512MB RAM, 0.1 CPU, 1GB storage  
+- **Vercel**: Serverless functions, 100GB bandwidth
+
+See [Free Tier Deployment Guide](docs/free-tier-deployment.md) for detailed instructions.
+
+### Environment Setup
+
+1. Copy environment template:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+2. Set required variables:
+   ```bash
+   MFEC_LLM_BASE_URL=https://gpt.mfec.co.th/litellm
+   MFEC_LLM_API_KEY=your_api_key_here
+   ENCRYPTION_KEY=your_32_character_key_here
+   ```
+
+3. For production deployment, set these as secrets in your platform dashboard
+
+## Free Tier Optimizations
+
+The application is optimized for free hosting platforms:
+
+- **Memory Efficient**: Optimized for 512MB RAM limits
+- **Smart Caching**: Reduces API calls and improves performance
+- **Auto Cleanup**: Manages storage within 1GB limits
+- **Rate Limiting**: Prevents quota exhaustion
+- **Fallback API Keys**: Users can provide their own keys when needed
+- **Health Monitoring**: Built-in monitoring for free tier constraints
 
 ## MFEC Assets
 
@@ -47,6 +109,12 @@ The project includes official MFEC brand assets:
 - `MFEC_System&User_Manual_Template.docx` - Official document template
 - `ENG_MFEC Brand Guideline as of 11 Sep 23.pdf` - Brand guidelines
 - MFEC logos in various formats (PNG, AI)
+
+## Documentation
+
+- [Free Tier Deployment Guide](docs/free-tier-deployment.md) - Complete deployment instructions
+- [General Deployment Guide](docs/deployment.md) - Advanced deployment options
+- [Project Specifications](.kiro/specs/thai-document-generator/) - Detailed requirements and design
 
 ## Security
 

@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  thai-doc-generator-staging:
+    image: thai-document-generator:staging
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=staging
+      - MFEC_LLM_BASE_URL=${MFEC_LLM_BASE_URL}
+      - MFEC_LLM_API_KEY=${MFEC_LLM_API_KEY}
+      - MFEC_LLM_CHAT_MODEL=${MFEC_LLM_CHAT_MODEL}
+      - MFEC_LLM_EMBEDDING_MODEL=${MFEC_LLM_EMBEDDING_MODEL}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ALLOW_USER_API_KEYS=${ALLOW_USER_API_KEYS}
+      - DEBUG_MODE=false
+      - LOG_LEVEL=info
+      - NEXT_PUBLIC_ENABLE_ANALYTICS=true
+      - NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING=true
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=30
+      - RATE_LIMIT_REQUESTS_PER_HOUR=500
+    volumes:
+      - staging_exports:/app/exports
+      - staging_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.thai-doc-staging.rule=Host(`thai-doc-generator-staging.example.com`)"
+      - "traefik.http.routers.thai-doc-staging.tls=true"
+      - "traefik.http.routers.thai-doc-staging.tls.certresolver=letsencrypt"
+
+volumes:
+  staging_exports:
+    driver: local
+  staging_logs:
+    driver: local
+
+networks:
+  default:
+    name: thai-doc-generator-staging-network

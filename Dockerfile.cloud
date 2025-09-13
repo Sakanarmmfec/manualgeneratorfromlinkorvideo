@@ -1,0 +1,77 @@
+# Free Tier Optimized Dockerfile for Thai Document Generator
+# Optimized for Railway, Render, and other free hosting platforms
+
+FROM node:18-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies with optimizations for free tier
+RUN npm ci --only=production --no-audit --no-fund && \
+    npm cache clean --force
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Disable telemetry during build
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Build with optimizations for free tier
+RUN npm run build
+
+# Production image, optimized for minimal size and memory usage
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy public folder
+COPY --from=builder /app/public ./public
+
+# Create .next directory with proper permissions
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Copy built application
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy MFEC template assets
+COPY --from=builder --chown=nextjs:nodejs /app/.qodo ./.qodo
+
+# Create exports directory for generated documents
+RUN mkdir -p /app/exports && chown nextjs:nodejs /app/exports
+
+# Create logs directory for basic logging
+RUN mkdir -p /app/logs && chown nextjs:nodejs /app/logs
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Set environment variables for free tier optimization
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+ENV NODE_OPTIONS "--max-old-space-size=400"
+
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Start the application
+CMD ["node", "server.js"]

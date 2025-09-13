@@ -1,0 +1,205 @@
+name: Free Tier Deployment
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Deployment platform'
+        required: true
+        default: 'railway'
+        type: choice
+        options:
+          - railway
+          - render
+          - vercel
+
+env:
+  NODE_VERSION: '18'
+  APP_NAME: thai-document-generator
+
+jobs:
+  test:
+    name: Test Application
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run type checking
+      run: npm run type-check
+      
+    - name: Run linting
+      run: npm run lint
+      
+    - name: Run tests
+      run: npm run test
+      
+    - name: Build application (test build)
+      run: npm run build
+      env:
+        MFEC_LLM_BASE_URL: https://gpt.mfec.co.th/litellm
+        NEXT_PUBLIC_APP_URL: http://localhost:3000
+        ENCRYPTION_KEY: test_key_32_characters_long_here
+
+  deploy-railway:
+    name: Deploy to Railway
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && (github.event.inputs.platform == 'railway' || github.event.inputs.platform == '')
+    environment: railway-production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install Railway CLI
+      run: npm install -g @railway/cli
+      
+    - name: Deploy to Railway
+      run: |
+        echo "Deploying to Railway..."
+        railway login --token ${{ secrets.RAILWAY_TOKEN }}
+        railway up --detach
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        
+    - name: Wait for deployment
+      run: |
+        echo "Waiting for deployment to complete..."
+        sleep 60
+        
+    - name: Health check
+      run: |
+        echo "Running health check..."
+        # Get the Railway app URL (you may need to set this as a secret)
+        curl -f ${{ secrets.RAILWAY_APP_URL }}/api/health || exit 1
+      continue-on-error: true
+
+  deploy-render:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event.inputs.platform == 'render'
+    environment: render-production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Trigger Render Deploy
+      run: |
+        echo "Triggering Render deployment..."
+        curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+        
+    - name: Wait for deployment
+      run: |
+        echo "Waiting for Render deployment..."
+        sleep 120
+        
+    - name: Health check
+      run: |
+        echo "Running health check..."
+        curl -f ${{ secrets.RENDER_APP_URL }}/api/health || exit 1
+      continue-on-error: true
+
+  deploy-vercel:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event.inputs.platform == 'vercel'
+    environment: vercel-production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install Vercel CLI
+      run: npm install -g vercel
+      
+    - name: Deploy to Vercel
+      run: |
+        echo "Deploying to Vercel..."
+        vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        
+    - name: Health check
+      run: |
+        echo "Running health check..."
+        # Vercel URL is typically predictable, but you may want to set this as a secret
+        curl -f ${{ secrets.VERCEL_APP_URL }}/api/health || exit 1
+      continue-on-error: true
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-railway, deploy-render, deploy-vercel]
+    if: always()
+    
+    steps:
+    - name: Deployment Success
+      if: needs.deploy-railway.result == 'success' || needs.deploy-render.result == 'success' || needs.deploy-vercel.result == 'success'
+      run: |
+        echo "✅ Free tier deployment completed successfully!"
+        echo "Platform: ${{ github.event.inputs.platform || 'railway' }}"
+        echo "Commit: ${{ github.sha }}"
+        
+    - name: Deployment Failure
+      if: needs.deploy-railway.result == 'failure' || needs.deploy-render.result == 'failure' || needs.deploy-vercel.result == 'failure'
+      run: |
+        echo "❌ Free tier deployment failed!"
+        echo "Platform: ${{ github.event.inputs.platform || 'railway' }}"
+        echo "Check the logs for more details."
+        exit 1
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run security audit
+      run: npm audit --audit-level moderate
+      continue-on-error: true
+      
+    - name: Check for secrets in code
+      run: |
+        echo "Checking for potential secrets..."
+        # Simple check for common secret patterns
+        if grep -r "api[_-]key\|secret\|password" --include="*.ts" --include="*.js" --include="*.json" src/ || true; then
+          echo "⚠️  Potential secrets found in code. Please review."
+        else
+          echo "✅ No obvious secrets found in source code."
+        fi

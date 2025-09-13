@@ -2,7 +2,9 @@
 
 ## Introduction
 
-This application will automatically generate Thai user manuals and product documents following MFEC's format standards. The system will accept product links as input, use LLM technology to translate, format, organize, and summarize content appropriately, and include relevant images in the final documents. The AI will intelligently restructure and arrange content to create professional, well-organized documentation that follows MFEC's established formatting guidelines.
+This application will automatically generate Thai user manuals and product documents following MFEC's format standards. The system will accept product links and YouTube video URLs as input, use LLM technology to translate, format, organize, and summarize content appropriately, and include relevant images in the final documents. The AI will intelligently restructure and arrange content to create professional, well-organized documentation that follows MFEC's established formatting guidelines.
+
+**Scope Limitations:** This system is focused solely on document generation from external sources (URLs and videos). It does not include RAG (Retrieval-Augmented Generation), knowledge base functionality, or chatbot interfaces. All AI processing is dedicated to content extraction, translation, formatting, and document generation tasks.
 
 ## Requirements
 

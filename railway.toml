@@ -1,0 +1,47 @@
+# Railway.app Configuration for Thai Document Generator
+# Free tier deployment configuration
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/api/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Free tier resource limits
+[deploy.resources]
+# Railway free tier: 512MB RAM, 1 vCPU, 1GB storage
+memory = 512
+cpu = 1000  # 1 vCPU in millicores
+
+# Environment variables (set these in Railway dashboard)
+[environments.production.variables]
+NODE_ENV = "production"
+PORT = "3000"
+HOSTNAME = "0.0.0.0"
+
+# These should be set as secrets in Railway dashboard:
+# MFEC_LLM_BASE_URL
+# MFEC_LLM_API_KEY  
+# MFEC_LLM_CHAT_MODEL
+# MFEC_LLM_EMBEDDING_MODEL
+# ENCRYPTION_KEY
+# NEXT_PUBLIC_APP_URL
+
+[environments.production.deploy]
+# Free tier optimizations
+replicas = 1
+strategy = "rolling"
+
+# Networking
+[networking]
+# Railway provides automatic HTTPS
+serviceDomain = "thai-doc-generator"
+
+# Monitoring (basic logging for free tier)
+[observability]
+# Railway provides basic logs for free
+logRetention = "7d"  # 7 days for free tier
